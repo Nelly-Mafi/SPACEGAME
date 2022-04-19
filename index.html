@@ -1,0 +1,222 @@
+<!--
+	Nelly Mafi
+	INTD-350
+	Professor Joyce Lam
+	Final Project Code	
+-->
+
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Final Project</title>
+		<!--JS Libraries Used-->
+		<script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/n5ro/aframe-physics-system@v4.0.1/dist/aframe-physics-system.min.js"></script>
+
+		<!--Main JS Code For Collision-->
+        <script>
+            AFRAME.registerComponent("trackball", {
+              tick: function() {
+				//this = obstacle = dynamic body
+                let pos = this.el.getAttribute("position");
+                var modelOutput = document.querySelector('#model');
+                var modelPos = modelOutput.getAttribute('position');
+				var injuredOutput = document.querySelector('#injuredModel');
+
+				/* console.log(s) used for debugging
+				console.log(modelPos.y);
+				console.log(pos.x);
+				obstacle position="5 -0.44 -7.5"
+				model position="-5 -0.44 -7.5"
+				*/
+
+                if(pos.x < modelPos.x ){
+
+					//collision statement 
+					if ((pos.y + 0.008151) > modelPos.y && pos.x > -5.2) {
+						
+						/* debugging
+						window.alert("game over");
+						//console.log(pos.x); //-5.035900000020863 obstacle
+						//console.log(pos.y); //-0.44 obstacle
+						//console.log(modelPos.x); //-5 model
+						//console.log(modelPos.y); //-0.44 model --> after jump = 1.284565446355564
+						*/
+						
+						// obstacle reset position
+						this.el.setAttribute('animation', 'property: position; from: -5 -0.44 -7.5');
+						this.el.setAttribute('animation', 'property: position; to:-5.3 -0.44 -7.5');
+						this.el.setAttribute('animation', 'property: position; dur: 2000');
+						// sync
+						this.el.components["dynamic-body"].syncToPhysics();
+						modelOutput.setAttribute('visible', 'false');
+						//injured animation after collision
+						injuredOutput.setAttribute('visible', 'true');
+					}
+					//not collision statement
+					else if((pos.y + 0.008151) > modelPos.y && pos.x < -5.2){
+						//obstacle slow
+						this.el.setAttribute('animation', 'property: position; from: 10 -0.44 -7.5');
+						this.el.setAttribute('animation', 'property: position; to:-30 -0.44 -7.5');
+						this.el.setAttribute('animation', 'property: position; dur: 5000');
+						// sync
+						this.el.components["dynamic-body"].syncToPhysics();
+						modelOutput.setAttribute('visible', 'true');
+						injuredOutput.setAttribute('visible', 'false');
+					}	
+				}
+              }
+            });
+        </script>
+
+	</head>
+
+	<!-------------------------------------------------------------------------------------------------------------------------->
+
+	<body>
+		<a-scene>
+			<a-assets>
+                <!--3D MODELS-->
+				<a-asset-item id="MODEL1" src="models/Running.gltf"></a-asset-item>
+				<a-asset-item id="MODEL2" src="models/Injured Run.gltf"></a-asset-item>
+                <a-asset-item id="rock" src="models/scene.gltf"></a-asset-item>
+				<!-- SKY -->
+				<img id="SPACE" crossorigin="anonymous" src="images/purple.jpeg">
+				<!--FLOOR-->
+				<img id="FLOOR" crossorigin="anonymous" src="images/floor2.jpeg">
+			</a-assets>
+
+			<!--360 BACKGROUND-->
+			<a-sky id="sky" radius="200" src="#SPACE"
+			animation="property: rotation; to: 0 360 0; dur: 80000; easing:linear; loop:true;"></a-sky>
+			<!--FLOOR-->
+			<a-plane src="#FLOOR" position="0 -0.44 0" width="0.5" height="0.3"  scale="100 100 100" rotation="-90 0 0"
+			animation="property: position; to: -10 -0.44 0; dur: 10000; easing:linear; loop:true;"></a-plane>
+
+            <!--3D MODEL PLACEMENT-->
+			<!--RUNNING MODEL-->
+			<a-entity id="model" gltf-model="#MODEL1" 
+			visible="true"
+			position="-5 -0.44 -7.5" 
+			rotation="0 90 0"
+			scale="1 1 1"
+			animation-mixer="duration: 1.5; crossFadeDuration: 1; loop:infinite; clampWhenFinished:true;"
+            onclick="moveTo"
+            animation__bounceup="property: position; from: -5 -0.44 -7.5; to: -5 1.44 -7.5; easing: easeInOutQuad; dur: 500; start-events: click"
+            animation__bouncedown="property: position; from: -5 1.44 -7.5; to: -5 -0.44 -7.5; easing: easeInOutQuad; dur: 500; start-events: animationcomplete__bounceup"
+            ></a-entity>
+			<!--INJURED MODEL-->
+			<a-entity id="injuredModel" gltf-model="#MODEL2" 
+			visible="false"
+			position="-5 -0.44 -7.5" 
+			rotation="0 90 0"
+			scale="1 1 1"
+			animation-mixer="duration: 2; crossFadeDuration: 3; loop:1; clampWhenFinished:true;"
+=            ></a-entity>
+            <!--OBSTACLE-->
+            <a-entity 
+            id="obstacle" 
+            gltf-model="#rock" 
+            position="10 -0.44 -7.5" 
+            rotation="0 90 0"
+            scale="2 2 2"
+            color="red"
+            animation="property: position; to: -30 -0.44 -7.5; dur: 5000; easing:linear; loop:true;"
+            dynamic-body 
+            trackball>
+        	</a-entity>
+
+			<!------------------------LIGHTING------------------------------>
+
+			<!--Ambient Lighting-->
+			
+			<a-entity light="color: #e0faff; 
+							intensity: 2.4" 
+					position="2.34283 4.94715 9.35865">
+			</a-entity>
+
+			<!--Custom Point Lights-->
+				
+			<a-entity light="type: point; 
+							color: #; 
+							intensity: 1; 
+							distance: 9; 
+							castShadow: true; 
+							decay: 1.5;" 
+					position="5.47616 2.17827 0.15449" >
+			</a-entity>
+			
+			<a-entity light="type: point; 
+							color: #; 
+							intensity: 3; 
+							distance: 8; 
+							castShadow: true; 
+							decay: 1.5" 
+					position="4.62399 2.90699 0.48986">
+			</a-entity>
+			
+			<a-entity light="type: point; 
+							color: #; 
+							intensity: 3; 
+							distance: 4; 
+							castShadow: true; 
+							decay: 1.5" 
+					position="-2.70045 3.06637 2.38563">
+			</a-entity>
+			
+			<a-entity light="type: point; 
+							color: #; 
+							intensity: 4; 
+							distance: 2.3; 
+							castShadow: true; 
+							decay: 1.5" 
+					position="-3.3626 2.23999 2.05075">
+			</a-entity>
+
+			<a-entity light="type: point; 
+							color: #; 
+							intensity: 2; 
+							distance: 6.58; 
+							castShadow: true; 
+							decay: 1.5" 
+					position="4.01921 2.15515 -4.21913">
+			</a-entity>
+			
+			<a-entity light="type: point; 
+							color: #; 
+							intensity: 3; 
+							distance: 4.5; 
+							castShadow: true; 
+							decay: 1.5" 
+					position="4.59913 2.90699 -4.56809">
+			</a-entity>
+
+			<a-entity light="type: point; 
+							color: #; 
+							intensity: 3; 
+							distance: 15.13; 
+							castShadow: true; 
+							decay: 2.29" 
+					position="-3.64811 3.04864 -4.4108">
+			</a-entity>	
+			
+
+			<!--CAMERA + CURSOR-->
+
+			<a-entity id="cameraRig" position="-7 1 -7" rotation="0 -90 0">
+				<a-camera look-controls wasd-controls position="0 0 0" cursor="ray-origin: mouse" raycaster="objects: [gltf-model]">
+					<a-gui-cursor id="cursor"
+							raycaster="objects: [gui-interactable]"
+							fuse="false"
+					>
+					</a-gui-cursor> <!-- /cursor -->
+				</a-camera> <!-- /camera -->
+			</a-entity>
+
+		</a-scene>
+
+
+	</body>
+</html>
